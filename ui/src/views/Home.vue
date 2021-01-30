@@ -1,8 +1,111 @@
 <template>
   <div class="home">
-    <div id="svg"></div>
-    <div id="map" class="h-screen"></div>
-    <img alt="Vue logo" src="../assets/logo.png">
+    <div class="flex">
+      <div class="w-1/3">
+        <div class="flex flex-col">
+          <header class="px-6 flex flex-grow">
+            <v-form @submit.prevent="search" class="w-full mr-4">
+              <v-text-field
+                v-model="form.inputs.search"
+                color="primary"
+                :loading="form.state.searching"
+                :disabled="form.state.searching"
+              ></v-text-field>
+            </v-form>
+            <v-btn class="mt-4" large icon>
+              <v-icon large>
+                mdi-fullscreen
+              </v-icon>
+            </v-btn>
+          </header>
+          <section class="mt-2 px-6">
+            <v-menu offset-y>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  color="primary"
+                  dark
+                  block
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  All sections in report
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item
+                  v-for="(item, index) in items"
+                  :key="index"
+                  class="hover:bg-gray-100"
+                >
+                  <v-list-item-title>{{ item.title }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </section>
+          <section class="px-6 my-6">
+            BAR
+          </section>
+          <section class="flex px-6">
+            <div class="w-1/2">
+              <v-checkbox
+                v-model="form.inputs.checkboxs.checkbox1"
+                label="Checkbox 1"
+              ></v-checkbox>
+              <v-checkbox
+                v-model="form.inputs.checkboxs.checkbox2"
+                label="Checkbox 2"
+              ></v-checkbox>
+              <v-checkbox
+                v-model="form.inputs.checkboxs.checkbox3"
+                label="Checkbox 3"
+              ></v-checkbox>
+            </div>
+            <div class="w-1/2">
+              <v-checkbox
+                v-model="form.inputs.checkboxs.checkbox4"
+                label="Checkbox 4"
+              ></v-checkbox>
+              <v-checkbox
+                v-model="form.inputs.checkboxs.checkbox5"
+                label="Checkbox 5"
+              ></v-checkbox>
+              <v-checkbox
+                v-model="form.inputs.checkboxs.checkbox6"
+                label="Checkbox 6"
+              ></v-checkbox>
+            </div>
+          </section>
+          <section class="flex flex-col px-6">
+
+          </section>
+          <footer class="absolute bottom-0 px-6 py-2 w-1/3 flex justify-between">
+            <v-btn large icon>
+              <v-icon large>
+                mdi-reload
+              </v-icon>
+            </v-btn>
+            <div>
+              <p>X selected</p>
+            </div>
+            <div>
+              <v-btn large icon>
+                <v-icon large>
+                  mdi-check-all
+                </v-icon>
+              </v-btn>
+              <v-btn large icon>
+                <v-icon large>
+                  mdi-share-all
+                </v-icon>
+              </v-btn>
+            </div>
+          </footer>
+        </div>
+      </div>
+      <div id="map" class="h-screen w-2/3">
+        <div id="svg"></div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -11,6 +114,19 @@ import { SVG } from '@svgdotjs/svg.js'
 
 export default {
   name: 'Home',
+  created() {
+    var rawSchools = require('../../schools.json')
+    this.schools = rawSchools.filter((school, i) => i < 50).map((school) => {
+      const negative = Math.round(Math.random() * 10) / 30
+      const neutral = Math.round(Math.random() * 10) / 30
+      const positive = 1 - negative - neutral
+      return {
+        id: `school-${school.AIRO_ID}`,
+        lngLat: [school.Long, school.Lat],
+        sentiment: { negative, neutral, positive },
+      }
+    })
+  },
   mounted() {
     // this.drawColorArc(.3, .4, .3) // R G B
 
@@ -23,55 +139,52 @@ export default {
     });
 
     this.map.on('load', () => {
-      this.schools.map((schools) => {
-        return schools
-      }).forEach(school => {
+      this.schools.forEach(school => {
         this.drawMarker(school.lngLat, { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
       });
-      // this.drawMarker([-6.4118180, 53.285170], { red: .3, green: .6, blue: .1 }, 'school_1')
-      // this.drawMarker([-6.368400, 53.369120], { red: .2, green: .2, blue: .6 }, 'school_2')
-      // this.drawMarker([-6.411330, 53.657190], { red: .7, green: .1, blue: .2 }, 'school_3')
-
-      // new this.$mapbox.Marker({element: document.getElementById('test')})
-      //   .setLngLat([-6.4118180, 53.285170])
-      //   .addTo(this.map)
-
-      // new this.$mapbox.Marker()
-      //   .setLngLat([-6.368400, 53.369120])
-      //   .addTo(this.map)
-
-      // new this.$mapbox.Marker()
-      //   .setLngLat([-6.411330, 53.657190])
-      //   .addTo(this.map)
     })
   },
   data: () => ({
+    items: [
+      { title: 'Abstract' },
+      { title: '1. Leadership & management' },
+      { title: '2. Teaching & learning' },
+      { title: '3. Feedback from former evaluations' },
+      { title: '4. Self-evaluation & improvement' },
+      { title: 'Appendix' },
+    ],
     map: null,
     marker: {
       circle: {
         radius: 20,
       }
     },
-    schools: [
-      {
-        lngLat: [-6.4118180, 53.285170],
-        sentiment: { negative: .2, positive: .2, neutral: .6 },
-        id: 'school_1'
+    schools: [],
+    form: {
+      inputs: {
+        search: '',
+        checkboxs: {
+          checkbox1: false,
+          checkbox2: false,
+          checkbox3: false,
+          checkbox4: false,
+          checkbox5: false,
+          checkbox6: false,
+          checkbox7: false,
+        }
       },
-      {
-        lngLat: [-6.368400, 53.369120],
-        sentiment: { negative: .2, positive: .2, neutral: .6 },
-        id: 'school_2'
-
+      state: {
+        searching: false
       },
-      {
-        lngLat: [-6.411330, 53.657190],
-        sentiment: { negative: .7, positive: .1, neutral: .2 },
-        id: 'school_3'
-      }
-    ]
+    },
   }),
   methods: {
+    search() {
+      this.form.state.searching = true
+      setTimeout(() => {
+        this.form.state.searching = false
+      }, 1500)
+    },
     drawMarker(lngLat, rgb, id) {
       const newMarker = document.createElement('div')
       newMarker.id = id
