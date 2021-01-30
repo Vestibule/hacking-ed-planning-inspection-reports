@@ -1,6 +1,8 @@
 import os
+from . import db
 
 from flask import Flask
+from flask import jsonify
     
 
 def create_app(test_config=None):
@@ -23,5 +25,16 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, Ed Planning!'
+
+    @app.route('/schools')
+    def schools():
+        db = db.get_db()
+
+        
+        res = db.execute('SELECT * FROM schools').fetchall()
+        return jsonify(res)
+
+    from . import db
+    db.init_app(app)
 
     return app
