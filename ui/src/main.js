@@ -17,6 +17,12 @@ Vue.use({
   }
 })
 
+Vue.use({
+  install(Vue) {
+    Vue.prototype.$mapbox = mapboxgl
+  }
+})
+
 new Vue({
   router,
   vuetify,
