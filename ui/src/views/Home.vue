@@ -111,10 +111,12 @@
 
 <script>
 import { SVG } from '@svgdotjs/svg.js'
+import { get_clusters } from '../coords_clusterizer'
 
 export default {
   name: 'Home',
   created() {
+    console.log(get_clusters)
     var rawSchools = require('../../schools.json')
     this.schools = rawSchools.filter((school, i) => i < 50).map((school) => {
       const negative = Math.round(Math.random() * 10) / 30
@@ -123,6 +125,7 @@ export default {
       return {
         id: `school-${school.AIRO_ID}`,
         lngLat: [school.Long, school.Lat],
+        cluster: false,
         sentiment: { negative, neutral, positive },
       }
     })
@@ -139,12 +142,59 @@ export default {
     });
 
     this.map.on('load', () => {
+
+      const bounds = this.map.getBounds()
+
+      console.log({bounds}, bounds._ne.lat - bounds._sw.lat, bounds._ne.lng - bounds._sw.lng)
+
+      const height = bounds._ne.lat - bounds._sw.lat
+      const width = bounds._ne.lng - bounds._sw.lng
+    
+      const clusters = get_clusters(
+        this.mapMetadatas.center[0],
+        this.mapMetadatas.center[1],
+        height,
+        width,
+        Math.min(height, width) / 10,
+        this.schools.map((school) => {
+          return {
+            id: `school-${school.AIRO_ID}`,
+            long: school.lngLat[0],
+            lat: school.lngLat[1],
+            cluster: true,
+            sentiment: { negative: school.negative, neutral: school.neutral, positive: school.positive },
+          }
+        })
+      )
+
+      console.log(clusters)
+
+      this.dump = [this.mapMetadatas.center[0],
+        this.mapMetadatas.center[1],
+        height,
+        width,
+        Math.min(height, width) / 10,
+        this.schools.map((school) => {
+          return {
+            id: `school-${school.AIRO_ID}`,
+            long: school.lngLat[0],
+            lat: school.lngLat[1],
+            cluster: true,
+            sentiment: { negative: school.negative, neutral: school.neutral, positive: school.positive },
+          }
+        })]
+
+
       this.schools.forEach(school => {
-        this.drawMarker(school.lngLat, { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
+        if(school.cluster) {
+          this.drawMarker(school.lngLat, { red: 1, green: 0, blue: 0 }, school.id)
+        }
+          this.drawMarker(school.lngLat, { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
       });
     })
   },
   data: () => ({
+    dump: null,
     items: [
       { title: 'Abstract' },
       { title: '1. Leadership & management' },
@@ -154,6 +204,9 @@ export default {
       { title: 'Appendix' },
     ],
     map: null,
+    mapMetadatas: {
+      center: [-6.3857859, 53.3242381],
+    },
     marker: {
       circle: {
         radius: 20,
