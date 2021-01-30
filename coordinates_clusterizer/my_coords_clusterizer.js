@@ -228,3 +228,7 @@ function test(){
 }
 
 //test();
+
+export {
+    get_clusters,
+}
