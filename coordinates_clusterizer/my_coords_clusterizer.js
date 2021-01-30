@@ -140,23 +140,51 @@ function getClusters_2ndpass(map_center = new coordinates(0,0), map_height = 0.0
     // iteratively merge the closest pair of clusters up until no pair is closer than max_dist
     dist_matrix = make2darray(clusters.length, clusters.length);
     // init distance matrix
+    //var dist_matrix_init_start = performance.now();
 	clusters.forEach( function(e, i) {
 		for (var j = i+1 ; j < clusters.length ; j++){
 			dist_matrix[i][j] = e.get_coords().distance(clusters[j].get_coords());
 		}
     });
+    //var dist_matrix_init_end = performance.now();
+    //console.log("distances matrix initialized in " + (dist_matrix_init_end - dist_matrix_init_start) + "ms");
+
     var next_merge = getClusters_2ndpass_get_next_merge(dist_matrix, max_dist);
+    //var merge_count = 0;
     while(next_merge[0] != undefined){
         getClusters_2ndpass_merge(dist_matrix, next_merge[0], next_merge[1], clusters);
         next_merge = getClusters_2ndpass_get_next_merge(dist_matrix, max_dist);
+        //merge_count ++;
     }
+    //console.log("merge_count = " + merge_count);
 }
 
 
-function getClusters(map_center = new coordinates(0,0), map_height = 0.0, map_width = 0.0, max_dist = 0.0, school_coordinates = []){
+function getClusters_internal(map_center = new coordinates(0,0), map_height = 0.0, map_width = 0.0, max_dist = 0.0, school_coordinates = []){
+    //console.log("getClusters : ");
+    //var first_pass_start = performance.now();
     var clusters = getClusters_1stpass(map_center, map_height, map_width, school_coordinates);
+    //var first_pass_end = performance.now();
+    //console.log("first pass ended after " + (first_pass_end - first_pass_start) + "ms");
+    
+    //var second_pass_start = performance.now();
     getClusters_2ndpass(map_center, map_height, map_width, max_dist, clusters);
+    //var second_pass_end = performance.now();
+    //console.log("second pass ended after " + (second_pass_end - second_pass_start) + "ms");
     return clusters;
+}
+
+function get_clusters(map_center_long, map_center_lat, map_height, map_width, max_clustering_distance, schools_list){
+    schools_coordinates = schools_list.map(x => {return new coordinates(x.long, x.lat)});
+    clusters = getClusters_internal(new coordinates(map_center_long, map_center_lat), map_height, map_width, max_clustering_distance, schools_coordinates);
+    r = new Array(clusters.length);
+    clusters.forEach( function (e,i){
+        r[i] = new Array(e._cluster_items.length);
+        e._cluster_items().forEach( function (ee,ii){
+            r[i].push(schools_list[ee.get_item_id]);
+        });
+    });
+    return r;
 }
 
 
@@ -184,14 +212,14 @@ function test(){
     console.log("running test : ");
     var test_start = performance.now();
 
-    var clusters = getClusters(map_center, map_height, map_width, max_dist, test_coords);
+    var clusters = getClusters_internal(map_center, map_height, map_width, max_dist, test_coords);
 
     var test_end = performance.now();
     // check results
     console.log("test ended after " + (test_end - test_start) + "ms");
     console.log("test returned " + clusters.length + " clusters");
     clusters.forEach( function(e,i) {
-        console.log("clusters[" + i +  "] (" + e._cluster_items.length() + " items)");
+        console.log("clusters[" + i +  "] (" + e._cluster_items.length + " items)");
 //        for (var ee of e._cluster_items){
 //            console.log("    [" + ee.item_id + " : " + ee.get_coords().tostr() + "]");
 //        }
