@@ -161,7 +161,7 @@ export default {
             id: `school-${school.AIRO_ID}`,
             long: school.lngLat[0],
             lat: school.lngLat[1],
-            cluster: true,
+            isCluster: true,
             sentiment: { negative: school.negative, neutral: school.neutral, positive: school.positive },
           }
         })
@@ -169,27 +169,17 @@ export default {
 
       console.log(clusters)
 
-      this.dump = [this.mapMetadatas.center[0],
-        this.mapMetadatas.center[1],
-        height,
-        width,
-        Math.min(height, width) / 10,
-        this.schools.map((school) => {
-          return {
-            id: `school-${school.AIRO_ID}`,
-            long: school.lngLat[0],
-            lat: school.lngLat[1],
-            cluster: true,
-            sentiment: { negative: school.negative, neutral: school.neutral, positive: school.positive },
-          }
-        })]
+      this.schools = [...this.schools, ...clusters]
 
+      this.schools = clusters
 
       this.schools.forEach(school => {
-        if(school.cluster) {
-          this.drawMarker(school.lngLat, { red: 1, green: 0, blue: 0 }, school.id)
-        }
+        if(school.isCluster) {
+          console.log('painting a cluster', {cluster: school})
+          this.drawMarker([school.long, school.lat], { red: .9, green: .05, blue: .05 }, school.id)
+        } else {
           this.drawMarker(school.lngLat, { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
+        }
       });
     })
   },
