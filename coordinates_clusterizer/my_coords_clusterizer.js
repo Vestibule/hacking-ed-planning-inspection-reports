@@ -166,22 +166,25 @@ function getClusters_internal(map_center = new coordinates(0,0), map_height = 0.
     var clusters = getClusters_1stpass(map_center, map_height, map_width, school_coordinates);
     //var first_pass_end = performance.now();
     //console.log("first pass ended after " + (first_pass_end - first_pass_start) + "ms");
+    console.log({clusters});
     
     //var second_pass_start = performance.now();
     getClusters_2ndpass(map_center, map_height, map_width, max_dist, clusters);
     //var second_pass_end = performance.now();
     //console.log("second pass ended after " + (second_pass_end - second_pass_start) + "ms");
+    console.log({clusters});
     return clusters;
 }
 
 function get_clusters(map_center_long, map_center_lat, map_height, map_width, max_clustering_distance, schools_list){
-    schools_coordinates = schools_list.map(x => {return new coordinates(x.long, x.lat)});
+    var schools_coordinates = schools_list.map(x => {return new coordinates(x.long, x.lat)});
     clusters = getClusters_internal(new coordinates(map_center_long, map_center_lat), map_height, map_width, max_clustering_distance, schools_coordinates);
+
     r = new Array(clusters.length);
     clusters.forEach( function (e,i){
         r[i] = new Array(e._cluster_items.length);
-        e._cluster_items().forEach( function (ee,ii){
-            r[i].push(schools_list[ee.get_item_id]);
+        e._cluster_items.forEach( function (ee,ii){
+            r[i].push(schools_list[ee.get_item_id()]);
         });
     });
     return r;
@@ -227,4 +230,68 @@ function test(){
     console.log("all done");
 }
 
+function test2(){
+    var map_center_long = -6.3857859;
+    var map_center_lat =53.3242381;
+    var map_height = 1.315700007418883;
+    var map_width = 2.6367187499999147;
+    var max_clustering_distance = 0.1315700007418883;
+    var schools_list = [
+        {"id":"school-undefined","long":-6.91956,"lat":52.5993,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.62828,"lat":52.8124,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.92923,"lat":52.6485,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.87567,"lat":52.7225,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.79887,"lat":52.7872,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.03297,"lat":52.7394,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.78127,"lat":52.8373,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.83898,"lat":52.6581,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.95892,"lat":52.7001,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.95411,"lat":52.7,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.73301,"lat":52.8003,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.73187,"lat":52.8037,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.76798,"lat":52.7381,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.7318,"lat":52.803,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.89544,"lat":52.795,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.92377,"lat":52.8409,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.85184,"lat":52.6771,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.55546,"lat":52.863,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.9072,"lat":52.5017,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.9029,"lat":52.5463,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.90043,"lat":52.4724,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.86912,"lat":52.8307,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.64791,"lat":52.696,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.68951,"lat":52.8799,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.61781,"lat":52.8915,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.98213,"lat":52.7854,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.91115,"lat":52.7485,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.77921,"lat":52.6862,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.70491,"lat":52.7559,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.68477,"lat":52.6844,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.96247,"lat":52.7012,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.92205,"lat":52.8378,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.92255,"lat":52.8386,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.85962,"lat":52.571,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.73378,"lat":52.8581,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.93185,"lat":52.8265,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.91224,"lat":52.836,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.91185,"lat":52.8353,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.971,"lat":52.735,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.91096,"lat":52.8294,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.94473,"lat":52.8373,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.95219,"lat":52.8405,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.32065,"lat":53.8595,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-6.97357,"lat":53.9169,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.79134,"lat":54.1183,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.70495,"lat":54.1908,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.32081,"lat":53.9652,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.35615,"lat":53.9916,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.47443,"lat":54.0642,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}},
+        {"id":"school-undefined","long":-7.49642,"lat":53.9747,"cluster":true,"sentiment":{"negative":"__vue_devtool_undefined__","neutral":"__vue_devtool_undefined__","positive":"__vue_devtool_undefined__"}}];
+    
+    clusters = get_clusters(map_center_long, map_center_lat, map_height, map_width, max_clustering_distance, schools_list);
+    console.log({clusters});
+}
+
 //test();
+test2();
+
