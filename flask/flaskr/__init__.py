@@ -29,9 +29,8 @@ def create_app(test_config=None):
     @app.route('/schools')
     def schools():
         db = db.get_db()
-
         
-        res = db.execute('SELECT * FROM schools').fetchall()
+        res = db.execute('SELECT * FROM schools WHERE Roll_No = ?', [request.args.get('id', '0')]).fetchone()
         return jsonify(res)
 
     from . import db
