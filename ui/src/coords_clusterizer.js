@@ -14,10 +14,10 @@ class coordinates {
     getX() { return this._x; }
     getY() { return this._y; }
 
-    add(coords){ this._x += coords.getX(); this._y += coords.getY(); return this; }
-    sub(coords){ this._x -= coords.getX(); this._y -= coords.getY(); return this; }
-    mul(a){ this._x *= a; this._y *= a; return this; }
-    div(a){ this._x /= a; this._y /= a; return this; }
+    add(coords){ return new coordinates(this._x + coords._x, this._y + coords._y); }
+    sub(coords){ return new coordinates(this._x - coords._x, this._y - coords._y); }
+    mul(a){ return new coordinates(this._x * a, this._y * a); }
+    div(a){ return new coordinates(this._x / a, this._y / a); }
 
     distance(dest){
         var dx = this._x - dest._x;
@@ -26,7 +26,7 @@ class coordinates {
     }
 
     tostr(){
-        return "[" + Math.round(this._x) + ", " + Math.round(this._y) + "]";
+        return "[" + this._x + ", " + this._y + "]";
     }
 }
 
@@ -45,22 +45,28 @@ class cluster {
         this._center = new coordinates(0, 0);
         this._cluster_items = cluster_items;
         for (var e of cluster_items) {
-            this._center.add(e.get_coords().clone().div(cluster_items.length));
+            this._center = this._center.add(e.get_coords());
+            //console.log("ADD " + e.get_coords().tostr());
         }
+        //console.log("somme : " + this._center.tostr());
+        this._center = this._center.div(cluster_items.length);
+        //console.log("moyenne : " + this._center.tostr());
+        //var a = this;
+        //console.log(JSON.stringify(a));
     }
     get_coords() { return this._center; }
     
     append_cluster_item(item = new cluster_item()){
         var weight_this = this._cluster_items.length / (this._cluster_items.length + 1);
         var weight_b = 1 / (this._cluster_items.length + 1);
-        this._center.mul(weight_this).add(item.get_coords().clone().mul(weight_b))
+        this._center = this._center.mul(weight_this).add(item.get_coords().mul(weight_b));
         this._cluster_items.push(item);
     }
 
     append_cluster_items(cluster_b = new cluster()){
         var weight_this = this._cluster_items.length / (this._cluster_items.length + cluster_b._cluster_items.length);
-        var weight_b = this._cluster_items.length / (this._cluster_items.length + cluster_b._cluster_items.length);
-        this._center.mul(weight_this).add(cluster_b._center.clone().mul(weight_b))
+        var weight_b = cluster_b._cluster_items.length / (this._cluster_items.length + cluster_b._cluster_items.length);
+        this._center = this._center.mul(weight_this).add(cluster_b._center.mul(weight_b))
         this._cluster_items = this._cluster_items.concat(cluster_b._cluster_items);
     }
 }
@@ -234,9 +240,6 @@ function test(){
 
 //test();
 
-export {
-    get_clusters,
-}
 
 function test2(){
     var map_center_long = -6.3857859;
@@ -301,4 +304,4 @@ function test2(){
 }
 
 //test();
-// test2();
+ test2();

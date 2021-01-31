@@ -1,5 +1,3 @@
-
-
 function make2darray(d1 = 0, d2 = 0){
 	var r = Array(d1);
     for (var i = 0 ; i < d1 ; i++) { r[i] = Array(d2); }
@@ -11,15 +9,15 @@ class coordinates {
         this._x = x;
         this._y = y;
     }
-    clone() { return new coordinates(this._x, this._y); };
+    clone() { return new coordinates(this._x, this._y); }
 
-    getX() { return this._x; };
-    getY() { return this._y; };
+    getX() { return this._x; }
+    getY() { return this._y; }
 
-    add(coords){ this._x += coords.getX(); this._y += coords.getY(); return this; };
-    sub(coords){ this._x -= coords.getX(); this._y -= coords.getY(); return this; };
-    mul(a){ this._x *= a; this._y *= a; return this; };
-    div(a){ this._x /= a; this._y /= a; return this; };
+    add(coords){ return new coordinates(this._x + coords._x, this._y + coords._y); }
+    sub(coords){ return new coordinates(this._x - coords._x, this._y - coords._y); }
+    mul(a){ return new coordinates(this._x * a, this._y * a); }
+    div(a){ return new coordinates(this._x / a, this._y / a); }
 
     distance(dest){
         var dx = this._x - dest._x;
@@ -28,7 +26,7 @@ class coordinates {
     }
 
     tostr(){
-        return "[" + Math.round(this._x) + ", " + Math.round(this._y) + "]";
+        return "[" + this._x + ", " + this._y + "]";
     }
 }
 
@@ -38,8 +36,8 @@ class cluster_item {
         this._coords = coords;
 
     }
-    get_coords(){ return this._coords; };
-    get_item_id() { return this._item_id; };
+    get_coords(){ return this._coords; }
+    get_item_id() { return this._item_id; }
 }
 
 class cluster {
@@ -47,22 +45,28 @@ class cluster {
         this._center = new coordinates(0, 0);
         this._cluster_items = cluster_items;
         for (var e of cluster_items) {
-            this._center.add(e.get_coords().clone().div(cluster_items.length));
+            this._center = this._center.add(e.get_coords());
+            //console.log("ADD " + e.get_coords().tostr());
         }
+        //console.log("somme : " + this._center.tostr());
+        this._center = this._center.div(cluster_items.length);
+        //console.log("moyenne : " + this._center.tostr());
+        //var a = this;
+        //console.log(JSON.stringify(a));
     }
-    get_coords() { return this._center; };
+    get_coords() { return this._center; }
     
     append_cluster_item(item = new cluster_item()){
         var weight_this = this._cluster_items.length / (this._cluster_items.length + 1);
         var weight_b = 1 / (this._cluster_items.length + 1);
-        this._center.mul(weight_this).add(item.get_coords().clone().mul(weight_b))
+        this._center = this._center.mul(weight_this).add(item.get_coords().mul(weight_b));
         this._cluster_items.push(item);
     }
 
     append_cluster_items(cluster_b = new cluster()){
         var weight_this = this._cluster_items.length / (this._cluster_items.length + cluster_b._cluster_items.length);
-        var weight_b = this._cluster_items.length / (this._cluster_items.length + cluster_b._cluster_items.length);
-        this._center.mul(weight_this).add(cluster_b._center.clone().mul(weight_b))
+        var weight_b = cluster_b._cluster_items.length / (this._cluster_items.length + cluster_b._cluster_items.length);
+        this._center = this._center.mul(weight_this).add(cluster_b._center.mul(weight_b))
         this._cluster_items = this._cluster_items.concat(cluster_b._cluster_items);
     }
 }
@@ -138,7 +142,7 @@ function getClusters_2ndpass_merge(dist_matrix = [[]], i = 0, j = 0, clusters = 
 
 function getClusters_2ndpass(map_center = new coordinates(0,0), map_height = 0.0, map_width = 0.0, max_dist = 0.0, clusters = []){
     // iteratively merge the closest pair of clusters up until no pair is closer than max_dist
-    dist_matrix = make2darray(clusters.length, clusters.length);
+    var dist_matrix = make2darray(clusters.length, clusters.length);
     // init distance matrix
     //var dist_matrix_init_start = performance.now();
 	clusters.forEach( function(e, i) {
@@ -166,25 +170,29 @@ function getClusters_internal(map_center = new coordinates(0,0), map_height = 0.
     var clusters = getClusters_1stpass(map_center, map_height, map_width, school_coordinates);
     //var first_pass_end = performance.now();
     //console.log("first pass ended after " + (first_pass_end - first_pass_start) + "ms");
-    console.log({clusters});
     
     //var second_pass_start = performance.now();
     getClusters_2ndpass(map_center, map_height, map_width, max_dist, clusters);
     //var second_pass_end = performance.now();
     //console.log("second pass ended after " + (second_pass_end - second_pass_start) + "ms");
-    console.log({clusters});
     return clusters;
 }
 
 function get_clusters(map_center_long, map_center_lat, map_height, map_width, max_clustering_distance, schools_list){
     var schools_coordinates = schools_list.map(x => {return new coordinates(x.long, x.lat)});
-    clusters = getClusters_internal(new coordinates(map_center_long, map_center_lat), map_height, map_width, max_clustering_distance, schools_coordinates);
+    var clusters = getClusters_internal(new coordinates(map_center_long, map_center_lat), map_height, map_width, max_clustering_distance, schools_coordinates);
 
-    r = new Array(clusters.length);
+    var r = new Array(clusters.length);
     clusters.forEach( function (e,i){
-        r[i] = new Array(e._cluster_items.length);
+        r[i] = {
+            clusterId: `cluster${i}`,
+            long: clusters[i].get_coords().getX(),
+            lat: clusters[i].get_coords().getY(),
+            isCluster: true,
+            schools: new Array(e._cluster_items.length),
+        }
         e._cluster_items.forEach( function (ee,ii){
-            r[i].push(schools_list[ee.get_item_id()]);
+            r[i].schools[ii] = schools_list[ee.get_item_id()];
         });
     });
     return r;
@@ -232,9 +240,7 @@ function test(){
 
 //test();
 
-export {
-    get_clusters,
-}
+
 function test2(){
     var map_center_long = -6.3857859;
     var map_center_lat =53.3242381;
@@ -298,5 +304,4 @@ function test2(){
 }
 
 //test();
-test2();
-
+ test2();
