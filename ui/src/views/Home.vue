@@ -116,9 +116,8 @@ import { get_clusters } from '../coords_clusterizer'
 export default {
   name: 'Home',
   created() {
-    console.log(get_clusters)
     var rawSchools = require('../../schools.json')
-    this.schools = rawSchools.filter((school, i) => i < 50).map((school) => {
+    this.rawSchools = rawSchools.filter((school, i) => i < 50).map((school) => {
       const negative = Math.round(Math.random() * 10) / 30
       const neutral = Math.round(Math.random() * 10) / 30
       const positive = 1 - negative - neutral
@@ -129,10 +128,9 @@ export default {
         sentiment: { negative, neutral, positive },
       }
     })
+    this.schools = this.rawSchools
   },
   mounted() {
-    // this.drawColorArc(.3, .4, .3) // R G B
-
     this.$mapbox.accessToken = 'pk.eyJ1IjoidmVzdGlidWxlIiwiYSI6ImNra2owMThuMDBicWMycHM3bXZrYXQ4ZGEifQ.rLhfcVbpIuVFUd0lxE4StA'
     this.map = new this.$mapbox.Map({
       container: 'map',
@@ -142,49 +140,54 @@ export default {
     });
 
     this.map.on('load', () => {
+      this.computeClusters()
+      // const bounds = this.map.getBounds()
 
-      const bounds = this.map.getBounds()
+      // console.log({bounds}, bounds._ne.lat - bounds._sw.lat, bounds._ne.lng - bounds._sw.lng)
 
-      console.log({bounds}, bounds._ne.lat - bounds._sw.lat, bounds._ne.lng - bounds._sw.lng)
-
-      const height = bounds._ne.lat - bounds._sw.lat
-      const width = bounds._ne.lng - bounds._sw.lng
+      // const height = bounds._ne.lat - bounds._sw.lat
+      // const width = bounds._ne.lng - bounds._sw.lng
     
-      const clusters = get_clusters(
-        this.mapMetadatas.center[0],
-        this.mapMetadatas.center[1],
-        height,
-        width,
-        Math.min(height, width) / 10,
-        this.schools.map((school) => {
-          return {
-            id: `school-${school.AIRO_ID}`,
-            long: school.lngLat[0],
-            lat: school.lngLat[1],
-            isCluster: true,
-            sentiment: { negative: school.negative, neutral: school.neutral, positive: school.positive },
-          }
-        })
-      )
+      // const clusters = get_clusters(
+      //   this.mapMetadatas.center[0],
+      //   this.mapMetadatas.center[1],
+      //   height,
+      //   width,
+      //   Math.min(height, width) / 10,
+      //   this.schools.map((school) => {
+      //     return {
+      //       id: `school-${school.AIRO_ID}`,
+      //       long: school.lngLat[0],
+      //       lat: school.lngLat[1],
+      //       isCluster: true,
+      //       sentiment: { negative: school.negative, neutral: school.neutral, positive: school.positive },
+      //     }
+      //   })
+      // )
 
-      console.log(clusters)
+      // console.log(clusters)
 
-      this.schools = [...this.schools, ...clusters]
+      // // this.schools = [...this.schools, ...clusters]
 
-      this.schools = clusters
+      // this.schools = clusters
 
-      this.schools.forEach(school => {
-        if(school.isCluster) {
-          console.log('painting a cluster', {cluster: school})
-          this.drawMarker([school.long, school.lat], { red: .9, green: .05, blue: .05 }, school.id)
-        } else {
-          this.drawMarker(school.lngLat, { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
-        }
-      });
+      // this.schools.forEach(school => {
+      //   if(school.isCluster) {
+      //     console.log('painting a cluster', {cluster: school})
+      //     this.drawMarker([school.long, school.lat], { red: .9, green: .05, blue: .05 }, school.id)
+      //   } else {
+      //     this.drawMarker(school.lngLat, { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
+      //   }
+      // });
     })
+
+    this.map.on('zoomend', () => {
+      this.computeClusters()
+    });
   },
   data: () => ({
     dump: null,
+    rawSchools: [],
     items: [
       { title: 'Abstract' },
       { title: '1. Leadership & management' },
@@ -202,6 +205,7 @@ export default {
         radius: 20,
       }
     },
+    markers: [],
     schools: [],
     form: {
       inputs: {
@@ -228,18 +232,69 @@ export default {
         this.form.state.searching = false
       }, 1500)
     },
-    drawMarker(lngLat, rgb, id) {
+    computeClusters() {
+      this.markers.forEach((id) => {
+        const el = document.getElementById(id)
+        el.parentNode.removeChild(el)
+      })
+
+      this.markers = []
+      const bounds = this.map.getBounds()
+
+      const height = bounds._ne.lat - bounds._sw.lat
+      const width = bounds._ne.lng - bounds._sw.lng
+
+      const clusters = get_clusters(
+        this.map.getCenter().lng,
+        this.map.getCenter().lat,
+        height,
+        width,
+        Math.min(height, width) / 10,
+        this.rawSchools.map((school) => {
+          return {
+            id: school.id,
+            long: school.lngLat[0],
+            lat: school.lngLat[1],
+            isCluster: false,
+            sentiment: { negative: school.sentiment.negative, neutral: school.sentiment.neutral, positive: school.sentiment.positive },
+          }
+        })
+      )
+
+      this.schools = clusters.filter(cluster => cluster.schools.length > 0).map((cluster) => {
+        if(cluster.schools.length > 1) {
+          return cluster
+        }
+
+        return cluster.schools[0]
+      })
+
+      this.markers = this.schools.map((school) => {
+        return school.id
+      })
+
+      this.schools.forEach(school => {
+        if(school.isCluster) {
+          console.log('painting a cluster', {cluster: school})
+          this.drawMarker([school.long, school.lat], { red: .9, green: .05, blue: .05 }, school.id, school.schools.length)
+        } else {
+          console.log('painting a school', {school})
+          this.drawMarker([school.long, school.lat], { red: school.sentiment.negative, green: school.sentiment.positive, blue: school.sentiment.neutral }, school.id)
+        }
+      });
+    },
+    drawMarker(lngLat, rgb, id, n = 1) {
       const newMarker = document.createElement('div')
       newMarker.id = id
       document.body.appendChild(newMarker)
 
-      this.drawColorArc(rgb, id)
+      this.drawColorArc(rgb, id, n)
 
       new this.$mapbox.Marker({element: document.getElementById(id)})
         .setLngLat(lngLat)
         .addTo(this.map)
     },
-    drawColorArc({ red, green, blue }, id) {
+    drawColorArc({ red, green, blue }, id, n = 1) {
     // rouge à gauche, vert à droite, bleu en haut
 
       const greenRad = green * Math.PI * 2;
@@ -252,10 +307,12 @@ export default {
       const circle = draw.circle(this.marker.circle.radius * 2)
       circle.attr({cx: this.marker.circle.radius * 2, cy: this.marker.circle.radius * 2, })
 
-      const text = draw.text('4')
-      text.move(Math.round(this.marker.circle.radius * 2 - this.marker.circle.radius / 5.5), Math.round(this.marker.circle.radius * 2 - this.marker.circle.radius / 2))
-      text.font({ fill: '#FFF', family: 'Inconsolata', size: Math.round(this.marker.circle.radius * 0.8), })
-
+      if(n > 1) {
+        const text = draw.text(n.toString())
+        text.move(Math.round(this.marker.circle.radius * 2 - this.marker.circle.radius / 5.5), Math.round(this.marker.circle.radius * 2 - this.marker.circle.radius / 2))
+        text.font({ fill: '#FFF', family: 'Inconsolata', size: Math.round(this.marker.circle.radius * 0.8), })
+      }
+      console.log({args: [[this.marker.circle.radius * 2, this.marker.circle.radius * 2], [this.marker.circle.radius, this.marker.circle.radius], [0, redRad], Math.PI / 2]})
       const RedArc = draw.path(this.drawArc([this.marker.circle.radius * 2, this.marker.circle.radius * 2], [this.marker.circle.radius, this.marker.circle.radius], [0, redRad], Math.PI / 2))
       RedArc.fill('none')
       RedArc.stroke({ color: '#F00', width: Math.round(this.marker.circle.radius / 2.5)})

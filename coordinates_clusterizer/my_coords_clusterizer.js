@@ -198,6 +198,10 @@ function get_clusters(map_center_long, map_center_lat, map_height, map_width, ma
     return r;
 }
 
+export {
+    get_clusters,
+}
+
 
 function test(){
     // test parameters

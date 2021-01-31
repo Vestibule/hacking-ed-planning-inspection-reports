@@ -185,17 +185,22 @@ function get_clusters(map_center_long, map_center_lat, map_height, map_width, ma
     var r = new Array(clusters.length);
     clusters.forEach( function (e,i){
         r[i] = {
-            clusterId: `cluster${i}`,
+            id: `cluster${i}`,
             long: clusters[i].get_coords().getX(),
             lat: clusters[i].get_coords().getY(),
             isCluster: true,
             schools: new Array(e._cluster_items.length),
+            sentiment: {negative: 0, neutral: 1, positive: 0}
         }
         e._cluster_items.forEach( function (ee,ii){
             r[i].schools[ii] = schools_list[ee.get_item_id()];
         });
     });
     return r;
+}
+
+export {
+    get_clusters,
 }
 
 
